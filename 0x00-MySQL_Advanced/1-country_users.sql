@@ -1,9 +1,9 @@
--- Create table users
+-- Create table users with country enumeration
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255),
-    country ENUM('US', 'CO', 'TN'),
+    country ENUM('US', 'CO', 'TN') NOT NULL DEFAULT 'US',
     PRIMARY KEY (id)
 );
 

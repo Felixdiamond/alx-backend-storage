@@ -3,16 +3,15 @@
 This module defines a get_page function that obtains the HTML content of a
 particular URL and caches it.
 """
-import redis
 import requests
-from functools import wraps
 from typing import Callable
+from functools import wraps
+import redis
+
+redis_client = redis.Redis()
 
 
-redis_store = redis.Redis()
-
-
-def data_cacher(method: Callable) -> Callable:
+def count_url_calls(method: Callable) -> Callable:
     """
     Decorator that counts how many times a particular URL is accessed.
 
@@ -23,21 +22,33 @@ def data_cacher(method: Callable) -> Callable:
         Callable: The decorated method.
     """
     @wraps(method)
-    def wrapper(url) -> str:
-        '''The wrapper function for caching the output.'''
-        redis_store.incr(f'count:{url}')
-        result = redis_store.get(f'result:{url}')
-        if result:
-            return result.decode('utf-8')
-        result = method(url)
-        redis_store.set(f'count:{url}', 0)
-        redis_store.setex(f'result:{url}', 10, result)
-        return result
+    def wrapper(url: str) -> str:
+        key = f"count:{url}"
+        redis_client.incr(key)
+        return method(url)
+
     return wrapper
 
 
-@data_cacher
+@count_url_calls
 def get_page(url: str) -> str:
-    '''Returns the content of a URL after caching the request's response,
-    and tracking the request'''
-    return requests.get(url).text
+    """
+    Obtains the HTML content of a particular URL and caches it with an
+    expiration time of 10 seconds.
+
+    Args:
+        url (str): The URL of the page to be retrieved.
+
+    Returns:
+        str: The HTML content of the page.
+    """
+    cache_key = f"cached:{url}"
+    cached_response = redis_client.get(cache_key)
+
+    if cached_response:
+        return cached_response.decode('utf-8')
+
+    response = requests.get(url)
+    redis_client.setex(cache_key, 10, response.text)
+
+    return response.text

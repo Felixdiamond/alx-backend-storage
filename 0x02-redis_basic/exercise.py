@@ -61,21 +61,21 @@ def replay(method: Callable):
     """
     input_key = f"{method.__qualname__}:inputs"
     output_key = f"{method.__qualname__}:outputs"
-
+    
     inputs = method.__self__._redis.lrange(input_key, 0, -1)
     outputs = method.__self__._redis.lrange(output_key, 0, -1)
 
     print(f"{method.__qualname__} was called {len(inputs)} times:")
-
+    
     for input_, output in zip(inputs, outputs):
-        print(f"{method.__qualname__}(*{input_.decode('utf-8')}) -> {output.decode('utf-8')}")
+        print(f"{method.__qualname__}(*{input_.decode('utf-8')}) -> "
+              f"{output.decode('utf-8')}")
 
 
 class Cache:
     """
     Cache class that stores data in a Redis instance.
     """
-
     def __init__(self):
         """
         Initializes a new Cache instance. Creates a new Redis client and
@@ -86,7 +86,8 @@ class Cache:
 
     @count_calls
     @call_history
-    def store(self, data: Union[str, bytes, int, float]) -> str:
+    def store(self,
+              data: Union[str, bytes, int, float]) -> str:
         """
         Stores the input data in the Redis instance using a randomly generated
         key and returns the key.
@@ -101,7 +102,9 @@ class Cache:
         self._redis.set(key, data)
         return key
 
-    def get(self, key: str, fn: Optional[Callable] = None) -> Union[str, bytes, int, float]:
+    def get(self,
+            key: str,
+            fn: Optional[Callable] = None) -> Union[str, bytes, int, float]:
         """
         Retrieves the data stored at the specified key in the Redis instance
         and returns it. If a callable is provided as the fn argument, it is
@@ -120,7 +123,8 @@ class Cache:
             value = fn(value)
         return value
 
-    def get_str(self, key: str) -> str:
+    def get_str(self,
+                key: str) -> str:
         """
         Retrieves the data stored at the specified key in the Redis instance,
         converts it to a string using decode("utf-8"), and returns it.
@@ -134,7 +138,8 @@ class Cache:
         value = self._redis.get(key)
         return value.decode("utf-8")
 
-    def get_int(self, key: str) -> int:
+    def get_int(self,
+                key: str) -> int:
         """
         Retrieves the data stored at the specified key in the Redis instance,
         converts it to an integer using int.from_bytes(value, byteorder), and
@@ -148,3 +153,4 @@ class Cache:
         """
         value = self._redis.get(key)
         return int.from_bytes(value, byteorder="big")
+

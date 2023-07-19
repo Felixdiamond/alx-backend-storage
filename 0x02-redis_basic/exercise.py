@@ -117,7 +117,7 @@ class Cache:
                 to the desired format.
 
         Returns:
-            Union[str, bytes, int, float]: The data stored at the specified key.
+            Union[str, bytes, int, float]: The data stored at the specified key
         """
         value = self._redis.get(key)
         if fn:

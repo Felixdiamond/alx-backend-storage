@@ -52,4 +52,3 @@ def get_page(url: str) -> str:
     redis_client.setex(cache_key, 10, response.text)
 
     return response.text
-

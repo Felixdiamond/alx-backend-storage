@@ -3,7 +3,7 @@
 This module defines a Cache class that stores data in a Redis instance.
 """
 import redis
-from typing import Union, Callable, Optional
+from typing import Union, Callable, Optional, Any
 from uuid import uuid4
 from functools import wraps
 
@@ -21,7 +21,7 @@ def count_calls(method: Callable) -> Callable:
     key = method.__qualname__
 
     @wraps(method)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args, **kwargs) -> Any:
         if isinstance(self._redis, redis.Redis):
             self._redis.incr(key)
         return method(self, *args, **kwargs)
@@ -44,16 +44,18 @@ def call_history(method: Callable) -> Callable:
     output_key = f"{method.__qualname__}:outputs"
 
     @wraps(method)
-    def wrapper(self, *args, **kwargs):
-        self._redis.rpush(input_key, str(args))
+    def wrapper(self, *args, **kwargs) -> Any:
+        if isinstance(self._redis, redis.Redis):
+            self._redis.rpush(input_key, str(args))
         result = method(self, *args, **kwargs)
-        self._redis.rpush(output_key, str(result))
+        if isinstance(self._redis, redis.Redis):
+            self._redis.rpush(output_key, str(result))
         return result
 
     return wrapper
 
 
-def replay(method: Callable):
+def replay(method: Callable) -> None:
     """
     Displays the history of calls of a particular function.
 
@@ -78,7 +80,7 @@ class Cache:
     Cache class that stores data in a Redis instance.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes a new Cache instance. Creates a new Redis client and
         flushes the instance using flushdb.
@@ -106,7 +108,7 @@ class Cache:
 
     def get(self,
             key: str,
-            fn: Optional[Callable] = None) -> Union[str, bytes, int, float]:
+            fn: Callable = None) -> Union[str, bytes, int, float]:
         """
         Retrieves the data stored at the specified key in the Redis instance
         and returns it. If a callable is provided as the fn argument, it is

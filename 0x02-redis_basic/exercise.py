@@ -4,7 +4,7 @@ This module defines a Cache class that stores data in a Redis instance.
 """
 import redis
 from typing import Union, Callable, Optional
-from uuid import uuid4
+import uuid
 from functools import wraps
 
 
@@ -99,7 +99,7 @@ class Cache:
         Returns:
             str: The key used to store the data.
         """
-        key = str(uuid4())
+        key = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
 

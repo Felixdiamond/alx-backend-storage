@@ -30,7 +30,34 @@ def count_url_calls(method: Callable) -> Callable:
     return wrapper
 
 
+def cache_result(method: Callable) -> Callable:
+    """
+    Decorator that caches the result of a method using Redis.
+
+    Args:
+        method (Callable): The method to be decorated.
+
+    Returns:
+        Callable: The decorated method.
+    """
+    @wraps(method)
+    def wrapper(url: str) -> str:
+        cache_key = f"cached:{url}"
+        cached_response = redis_client.get(cache_key)
+
+        if cached_response:
+            return cached_response.decode('utf-8')
+
+        response = method(url)
+        redis_client.setex(cache_key, 10, response)
+
+        return response
+
+    return wrapper
+
+
 @count_url_calls
+@cache_result
 def get_page(url: str) -> str:
     """
     Obtains the HTML content of a particular URL and caches it with an
@@ -42,13 +69,6 @@ def get_page(url: str) -> str:
     Returns:
         str: The HTML content of the page.
     """
-    cache_key = f"cached:{url}"
-    cached_response = redis_client.get(cache_key)
-
-    if cached_response:
-        return cached_response.decode('utf-8')
-
     response = requests.get(url)
-    redis_client.setex(cache_key, 10, response.text)
-
     return response.text
+    

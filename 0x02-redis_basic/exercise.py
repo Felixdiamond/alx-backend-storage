@@ -3,7 +3,7 @@
 This module defines a Cache class that stores data in a Redis instance.
 """
 import redis
-from typing import Union, Callable, Optional, Any
+from typing import Union, Callable, Any
 from uuid import uuid4
 from functools import wraps
 

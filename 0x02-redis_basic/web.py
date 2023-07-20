@@ -14,12 +14,6 @@ redis_client = redis.Redis()
 def count_url_calls(method: Callable) -> Callable:
     """
     Decorator that counts how many times a particular URL is accessed.
-
-    Args:
-        method (Callable): The method to be decorated.
-
-    Returns:
-        Callable: The decorated method.
     """
     @wraps(method)
     def wrapper(url: str) -> str:
@@ -35,12 +29,6 @@ def get_page(url: str) -> str:
     """
     Obtains the HTML content of a particular URL and caches it with an
     expiration time of 10 seconds.
-
-    Args:
-        url (str): The URL of the page to be retrieved.
-
-    Returns:
-        str: The HTML content of the page.
     """
     cache_key = f"cached:{url}"
     cached_response = redis_client.get(cache_key)
